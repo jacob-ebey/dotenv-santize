@@ -14,6 +14,8 @@ Quickly sanitize your .env (dotenv) files.
 All updates to be configured from within 
 
 * `editor.dotenvSecretReplacement`: The value to replace string secrets with
+* `editor.dotenvSecretReplacementRedactions:` An array of keys to remove entirely from the results of the sanitization process.
+* `editor.dotenvSecretReplacementExemptions:` An array of keys to ignore from sanatizing entirely.
 
 ## Release Notes
 
