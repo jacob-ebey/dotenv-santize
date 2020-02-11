@@ -7,14 +7,10 @@
 
 import * as vscode from 'vscode'
 import * as crypto from 'crypto'
+import { MessageOptions } from 'vscode'
 
 /** 
  * Extension Activate
- * @description this method is called when your extension is activated 
- * your extension is activated the very first time the command is executed
- * @private
- * @param context An extension context is a collection of utilities private to an extension.
- * @returns Absolutely nothing, but will raise an error if activation isn't possible in VSCode.
 */
 export function activate(context: vscode.ExtensionContext): void {
 
@@ -22,10 +18,18 @@ export function activate(context: vscode.ExtensionContext): void {
 
 	const disposable = vscode.commands.registerCommand('dotenvSanitize.sanitizeFile', () => {
 
-		const editor = vscode.window.activeTextEditor;
+		const editor = vscode.window.activeTextEditor
 		if (!editor) { return }
-		const document = editor.document;
+		const document = editor.document
 		
+		let secret: crypto.BinaryLike
+		
+		/** 
+		 * Extension Option: dotenvSecretPassphrase
+		*/
+
+		const dotenvSecretPassphrase: string | undefined = vscode.workspace.getConfiguration().get('editor.dotenvSecretPassphrase')
+
 		/** 
 		 * Extension Option: dotenvSecretReplacement 
 		*/
@@ -36,15 +40,29 @@ export function activate(context: vscode.ExtensionContext): void {
 		*/
 		const dotenvSecretReplacementRedactions: string[] | undefined = vscode.workspace.getConfiguration().get('editor.dotenvSecretReplacementRedactions')
 
+		/** 
+		 * Extension Option: dotenvSecretReplacementExemptions
+		*/
+		const dotenvSecretReplacementExemptions: string[] | undefined = vscode.workspace.getConfiguration().get('editor.dotenvSecretReplacementExemptions')
+
 		const checkAvailableCiphers = ((ciphers: string[], value: string) => {
 			return ciphers.some((result) => {
 				return value === result
 			})
 		})
 
-		if(checkAvailableCiphers(crypto.getCiphers(), dotenvSecretReplacement || "blowfish")) {
+		if(checkAvailableCiphers(crypto.getCiphers(), dotenvSecretReplacement || ((): string => {
+			vscode.window.showInformationMessage('No replacement string or encryption algorythm specified.', ["showWarningMessage"] as MessageOptions)
+			return ""
 
-			// crypto.scryptSync()
+		}).toString())) {
+
+			secret = crypto.scryptSync(dotenvSecretPassphrase || ((): string => {
+				
+				vscode.window.showInformationMessage('No passphrase set for encryption.',["showWarningMessage"] as MessageOptions)
+				return ""
+
+			}).toString(), 'salt', 64)
 
 		}
 
@@ -67,7 +85,7 @@ export function activate(context: vscode.ExtensionContext): void {
 				let newValue = split[1];
 				if (Number.isNaN(Number.parseFloat(split[1]))) {
 					// Otherwise we replace it
-					newValue = `"${dotenvSecretReplacement}"`
+					newValue = crypto.scryptSync(secret, 'salt', 64).toString()
 				}
 				
 				const newLine = split[0] + '=' + newValue
