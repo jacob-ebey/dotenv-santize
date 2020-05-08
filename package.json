@@ -12,7 +12,7 @@
 	"activationEvents": [
 		"onCommand:dotenvSanitize.sanitizeFile"
 	],
-	"main": "./out/extension.js",
+	"main": "./dist/extension.js",
 	"contributes": {
 		"configuration": [
 			{
@@ -20,8 +20,20 @@
 				"properties": {
 					"editor.dotenvSecretReplacement": {
 						"type": "string",
-						"default": "your-value",
-						"description": "The value to replace string secrets with in your .env (dotenv) files.",
+						"default": "",
+						"description": "Either an arbitrary string, or the specific cipher to be used for obfuscation of secrets with in your dotenv file.",
+						"scope": "window"
+					},
+					"editor.dotenvSecretReplacementRedactions": {
+						"type": "array",
+						"default": [],
+						"description": "An array of keys to be redacted from the results of the newly sanitized dotenv file.",
+						"scope": "window"
+					},
+					"editor.dotenvSecretReplacementExemptions": {
+						"type": "array",
+						"default": [],
+						"description": "An array of keys to be left unaltered within your dotenv file by the sanitization process.",
 						"scope": "window"
 					}
 				}
@@ -44,12 +56,15 @@
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
 		"@types/mocha": "^5.2.7",
-		"@types/node": "^12.11.7",
+		"@types/node": "^12.12.26",
 		"@types/vscode": "^1.40.0",
 		"glob": "^7.1.5",
 		"mocha": "^6.2.2",
-		"typescript": "^3.6.4",
 		"tslint": "^5.20.0",
+		"typescript": "^3.6.4",
 		"vscode-test": "^1.2.2"
+	},
+	"dependencies": {
+		"string-obfuscator": "0.0.2"
 	}
 }
